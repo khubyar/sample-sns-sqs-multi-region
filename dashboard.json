@@ -1,0 +1,47 @@
+{
+    "widgets": [
+        {
+            "type": "metric",
+            "x": 0,
+            "y": 6,
+            "width": 12,
+            "height": 6,
+            "properties": {
+                "metrics": [
+                    [ "AWS/SNS", "NumberOfMessagesPublished", "TopicName", "${PrimaryTopicName}", { "region": "${PrimaryRegion}", "label": "primary topic (${PrimaryRegion})"} ],
+                    [ "...", "${SecondaryTopicName}", { "region": "${SecondaryRegion}", "label": "secondary topic (${SecondaryRegion})"} ]
+                ],
+                "view": "timeSeries",
+                "stacked": true,
+                "period": 60,
+                "stat": "Sum",
+                "region": "${AWS::Region}",
+                "title": "SNS Messages Published"
+            }
+        },
+        {
+            "type": "metric",
+            "x": 12,
+            "y": 6,
+            "width": 12,
+            "height": 6,
+            "properties": {
+                "metrics": [
+                    [ "AWS/SQS", "NumberOfMessagesReceived", "QueueName", "${PrimaryQueueName}", { "region": "${PrimaryRegion}", "label": "active queue (${PrimaryRegion})" } ],
+                    [ "...", "${SecondaryDrQueueName}", { "region": "${SecondaryRegion}", "label": "dr queue (${SecondaryRegion})" } ],
+                    [ "...", "${SecondaryQueueName}", { "region": "${SecondaryRegion}", "label": "active queue (${SecondaryRegion})" } ],
+                    [ "...", "${PrimaryDrQueueName}", { "region": "${PrimaryRegion}", "label": "dr queue (${PrimaryRegion})" } ]
+                ],
+                "view": "timeSeries",
+                "stacked": true,
+                "period": 60,
+                "stat": "Sum",
+                "region": "${AWS::Region}",
+                "title": "SQS Messages Received"
+            }
+        }
+    ],
+    "periodOverride": "auto",
+    "start": "-PT15M",
+    "end": "P0D"
+}

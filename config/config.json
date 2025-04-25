@@ -1,0 +1,14 @@
+{
+  "primary": {
+    "ActiveQueueUrl": "https://sqs.us-east-1.amazonaws.com/564151284033/sns-sqs-multi-region-ActiveQueue-9eiEdy3LRxzo",
+    "SnsTopicArn": "arn:aws:sns:us-east-1:564151284033:sns-sqs-multi-region-SnsTopic-B3Tl0NSpCDMF",
+    "DisasterRecoveryQueueArn": "arn:aws:sqs:us-east-1:564151284033:sns-sqs-multi-region-DisasterRecoveryQueue-lq9WcpVV2wK7",
+    "region": "us-east-1"
+  },
+  "secondary": {
+    "ActiveQueueUrl": "https://sqs.us-west-2.amazonaws.com/564151284033/sns-sqs-multi-region-ActiveQueue-2oDxay2pM78I",
+    "SnsTopicArn": "arn:aws:sns:us-west-2:564151284033:sns-sqs-multi-region-SnsTopic-VsnK9d4RaYAp",
+    "DisasterRecoveryQueueArn": "arn:aws:sqs:us-west-2:564151284033:sns-sqs-multi-region-DisasterRecoveryQueue-DLL4ar7Vl4r8",
+    "region": "us-west-2"
+  }
+}

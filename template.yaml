@@ -1,0 +1,158 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: 'Cross-region SNS-SQS-Lambda setup'
+
+Parameters:
+  PrimaryRegion:
+    Type: String
+    Default: 'us-east-1'
+    Description: Primary region for deployment
+    AllowedPattern: '^[a-z]{2}-[a-z]+-\d+$'
+  SecondaryRegion:
+    Type: String
+    Default: 'us-west-2'
+    Description: Secondary region for disaster recovery
+    AllowedPattern: '^[a-z]{2}-[a-z]+-\d+$'
+
+Resources:
+  ActiveQueue:
+    Type: AWS::SQS::Queue
+
+  QueuePolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      Queues:
+        - !Ref ActiveQueue
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: sns.amazonaws.com
+            Action: sqs:SendMessage
+            Resource: !GetAtt ActiveQueue.Arn
+            Condition:
+              ArnEquals:
+                aws:SourceArn: !Ref SnsTopic
+  QueueSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      Protocol: sqs
+      TopicArn: !Ref SnsTopic
+      Endpoint: !GetAtt ActiveQueue.Arn
+  DisasterRecoveryQueue:
+    Type: AWS::SQS::Queue
+  DRQueuePolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      Queues:
+        - !Ref DisasterRecoveryQueue
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: sns.amazonaws.com
+            Action: sqs:SendMessage
+            Resource: !GetAtt DisasterRecoveryQueue.Arn
+  SnsTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      Subscription:
+        - Endpoint: !GetAtt ActiveQueue.Arn
+          Protocol: sqs
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: SQSAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'sqs:ReceiveMessage'
+                  - 'sqs:DeleteMessage'
+                  - 'sqs:GetQueueAttributes'
+                Resource: !GetAtt ActiveQueue.Arn
+  SqsConsumer:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: sqs-consumer.handler
+      Runtime: ruby3.3
+      CodeUri: src/lambda
+      Timeout: 30
+      MemorySize: 512
+      Role: !GetAtt LambdaExecutionRole.Arn
+      ReservedConcurrentExecutions: 1
+      Events:
+        SQSEvent:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt ActiveQueue.Arn
+            BatchSize: 10
+            MaximumBatchingWindowInSeconds: 0
+            FunctionResponseTypes:
+              - ReportBatchItemFailures
+  DrLambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: SQSAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'sqs:ReceiveMessage'
+                  - 'sqs:DeleteMessage'
+                  - 'sqs:GetQueueAttributes'
+                Resource: !GetAtt DisasterRecoveryQueue.Arn
+  DrSqsConsumer:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: sqs-consumer.handler
+      Runtime: ruby3.3
+      CodeUri: src/lambda
+      Timeout: 30
+      MemorySize: 512
+      Role: !GetAtt DrLambdaExecutionRole.Arn
+      ReservedConcurrentExecutions: 1
+      Events:
+        SQSEvent:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt DisasterRecoveryQueue.Arn
+            BatchSize: 10
+            MaximumBatchingWindowInSeconds: 0
+            FunctionResponseTypes:
+              - ReportBatchItemFailures
+
+Outputs:
+  SnsTopicArn:
+    Value: !Ref SnsTopic
+    Description: SNS Topic Arn
+  ActiveQueueUrl:
+    Value: !GetAtt ActiveQueue.QueueUrl
+    Description: Active Queue Url
+  DisasterRecoveryQueueArn:
+    Value: !GetAtt DisasterRecoveryQueue.Arn
+    Description: DR QUEUE Arn
