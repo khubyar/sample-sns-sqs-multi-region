@@ -7,11 +7,11 @@ Amazon Simple Queue Service (SQS) is widely adopted by organizations for its abi
 ## Deployment Instructions
 1. Create a new directory, navigate to that directory in a terminal and clone the GitHub repository:
     ```
-    git clone https://github.com/marcosortiz/sns-sqs-multi-region.git
+    git clone https://github.com/aws-samples/sample-sns-sqs-multi-region.git
     ```
 1. Change directory to:
     ```
-    cd sns-sqs-multi-region
+    cd sample-sns-sqs-multi-region
     ```
 1. [Optional] Configure your regions. By defaut, we will deploy stacks on us-east-1 and us-west-2. If you want to change those regions, edit ./bin/config.sh, on lines 5 and 6:
     ```bash
