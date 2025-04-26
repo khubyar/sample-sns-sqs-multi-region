@@ -6,7 +6,7 @@ Amazon Simple Queue Service (SQS) is widely adopted by organizations for its abi
 
 ## Prerequisites
 - AWS CLI configured with appropriate permissions
-- Ruby (for running the producer script)
+- Ruby 2.7 or later(for running the producer script)
 - Git
 
 ## Deployment Instructions
@@ -16,7 +16,7 @@ Amazon Simple Queue Service (SQS) is widely adopted by organizations for its abi
     ```
 1. Change directory to:
     ```
-    cd sample-sns-sqs-multi-regionno
+    cd sample-sns-sqs-multi-region
     ```
 1. [Optional] Configure deployment regions. The default configuration deploys to us-east-1 (primary) and us-west-2 (secondary). If you want to change it, edit ./bin/config.sh, on lines 5 and 6:
     ```bash
@@ -41,9 +41,10 @@ The deployment creates:
 - one SNS topic in both primary and secondary regions
 - an active and dr SQS queues in both regions, including their respective SNS subscriptions
 - A CloudWatch dashboard for monitoring the message flow
-- All the required IAM permissions and policies
+- Rquired IAM permissions and policies
 
 ## Testing
+The testing procedure demonstraces message publishing to the primary region, cross-region message delivery and regional failover.
 
 1. Install the required dependencies:
     ```
@@ -97,7 +98,7 @@ The deployment creates:
 
 ## Cleanup
  
-Removes all deployed resources from both regions:
+To remove all resources from both regions, run:
 ```bash
 ./bin/delete-stacks.sh 
 ```
