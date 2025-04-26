@@ -4,6 +4,11 @@ Amazon Simple Queue Service (SQS) is widely adopted by organizations for its abi
 
 ![alt text](images/diagram.jpg)
 
+## Prerequisites
+- AWS CLI configured with appropriate permissions
+- Ruby (for running the producer script)
+- Git
+
 ## Deployment Instructions
 1. Create a new directory, navigate to that directory in a terminal and clone the GitHub repository:
     ```
@@ -11,9 +16,9 @@ Amazon Simple Queue Service (SQS) is widely adopted by organizations for its abi
     ```
 1. Change directory to:
     ```
-    cd sample-sns-sqs-multi-region
+    cd sample-sns-sqs-multi-regionno
     ```
-1. [Optional] Configure your regions. By defaut, we will deploy stacks on us-east-1 and us-west-2. If you want to change those regions, edit ./bin/config.sh, on lines 5 and 6:
+1. [Optional] Configure deployment regions. The default configuration deploys to us-east-1 (primary) and us-west-2 (secondary). If you want to change it, edit ./bin/config.sh, on lines 5 and 6:
     ```bash
     #!/bin/bash
     export STACK_NAME=sns-sqs-multi-region
@@ -23,7 +28,7 @@ Amazon Simple Queue Service (SQS) is widely adopted by organizations for its abi
     export SECONDARY_REGION=us-west-2
     ```
 
-1. From the command line, use shell script to deploy the AWS resources for the stack as specified in the template.yml file on the primary Region:
+1. From the command line, use shell script to deploy the AWS resources to the primary and secondaty regions:
     ```
     ./bin/deploy-stacks.sh 
     ```
@@ -32,26 +37,25 @@ Amazon Simple Queue Service (SQS) is widely adopted by organizations for its abi
 
 ## How it works
 
-This stack will deploy an Amazon API Gateway Rest Regional API with a Lambda integration. The AWS Lambda function is written in Python3.9. The function returns a small message with the service name and the Region it is deployed at. The inline code of the lambda is written in the template itself.
+The deployment creates:
+- one SNS topic in both primary and secondary regions
+- an active and dr SQS queues in both regions, including their respective SNS subscriptions
+- A CloudWatch dashboard for monitoring the message flow
+- All the required IAM permissions and policies
 
 ## Testing
 
-1. Install libraries:
+1. Install the required dependencies:
     ```
     bundle install
     ```
-1. Give execution permission to the shell scripts:
+1. Set execution permissions for the shell scripts:
     ```
     chmod +x ./bin/*
     ```
-1. run the producer, publishing messages to the primary region (in this example, us-east-1):
+1. run the message producer, publishing messages to the primary SNS topic on us-east-1:
     ```
     ./bin/run-producer.sh primary
-    ```
-
-    You will see that every second, the producer sends a message to the SNS topic, with a JSON payload with the timestamp when the message was generated, in unix format.
-
-    ```
     [15:10:12.000] Publishing to us-east-1 ...
     [15:10:13.000] Sending message {"recorded_at":1743433813000} ...
     [15:10:14.000] Sending message {"recorded_at":1743433814000} ...
@@ -63,21 +67,19 @@ This stack will deploy an Amazon API Gateway Rest Regional API with a Lambda int
     [15:10:20.000] Sending message {"recorded_at":1743433820000} ...
     ```
 
-1. Check Message Traffic on the ClowWatch Dashboard
-    After deploying the stacks, you will see a CloudWatch dashboard created on your primary region. The dashboard name starts with "SnsSqsMultiRegion-". Open the dashboard and after a few minutes, you should see traffic both on the primary SNS topic and on both active and dr queues:
+    The producer sends one message per second to the SNS topic with a timestamp payload.
 
-    ![alt text](images/dashboard-primary.jpg)
+1. Monitor message traffic in CloudWatch:
+   - Open the CloudWatch dashboard named "SnsSqsMultiRegion-*" in your primary region
+   - Verify messages are flowing through both primary and secondary region queues
+   
+   ![Primary Region Dashboard](images/dashboard-primary.jpg)
 
-    Since the producer sends 1 message per second to the SNS topid and both the primary and coss-region dr queues are subscribing to it, the bashboard shows 300 messages being published to the SNS topic and received from both SQS queues.
-
-1. To simulate a regional failover, kill the producer and run it again, publishing messages now to the dr region (in this example, us-west-2):
+1. Test a message producer regional failover:
+   - Stop the message producer (Ctrl+C)
+   - Start the message producer, now publishing messages to the SNS topic in the secondary region:
     ```
     ./bin/run-producer.sh secondary
-    ```
-
-    You will see that every second, the producer now sends a message to the SNS topic on the dr region.
-
-    ```
     [15:44:25.876] Publishing to us-west-2 ...
     [15:44:26.005] Sending message {"recorded_at":1745613866005} ...
     [15:44:27.000] Sending message {"recorded_at":1745613867000} ...
@@ -89,14 +91,13 @@ This stack will deploy an Amazon API Gateway Rest Regional API with a Lambda int
     [15:44:33.005] Sending message {"recorded_at":1745613873005} ...
     ```
 
-    If you wait a few minutes, the dashboard will now show traffic going to the secondary SNS topic on the dr region (us-west-2 in this example) and to the  SQS queues subscribed to that topic.
+    The producer now sends the messages to the SNS topic on us-west-2. After a few minutes, the dashboard will now show traffic going to the secondary SNS topic on us-west-2 and to the SQS queues subscribed to that topic.
 
-
-    ![alt text](images/dashboard-secondary.jpg)
+    ![Secondary Region Dashboard](images/dashboard-secondary.jpg)
 
 ## Cleanup
  
-Delete the stacks on both regions:
+Removes all deployed resources from both regions:
 ```bash
 ./bin/delete-stacks.sh 
 ```
