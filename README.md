@@ -5,7 +5,7 @@ Amazon Simple Queue Service (SQS) is widely adopted by organizations for its abi
 ![alt text](images/diagram.jpg)
 
 ## Prerequisites
-- AWS CLI configured with appropriate permissions
+- AWS SAM CLI configured with appropriate permissios
 - Ruby 2.7 or later(for running the producer script)
 - Git
 
@@ -40,6 +40,7 @@ Amazon Simple Queue Service (SQS) is widely adopted by organizations for its abi
 The deployment creates:
 - one SNS topic in both primary and secondary regions
 - an active and dr SQS queues in both regions, including their respective SNS subscriptions
+- One Lambda finction that consumes messages from each oe of the 4 SQS queues
 - A CloudWatch dashboard for monitoring the message flow
 - Rquired IAM permissions and policies
 
@@ -76,6 +77,32 @@ The testing procedure demonstraces message publishing to the primary region, cro
    
    ![Primary Region Dashboard](images/dashboard-primary.jpg)
 
+1. Tail the Lambda function that consumes data from the active queue on us-east-1:
+    ```
+    ./bin/tail-lambda-consumer.sh primary active
+    Tailing SqsConsumer in us-east-1...
+    2025/04/26/[$LATEST]8e2905acb4eb441f80066ec163908fae 2025-04-26T19:14:01.235000 {"recorded_at"=>1745694841003}
+    2025/04/26/[$LATEST]8e2905acb4eb441f80066ec163908fae 2025-04-26T19:14:02.247000 {"recorded_at"=>1745694842005}
+    2025/04/26/[$LATEST]8e2905acb4eb441f80066ec163908fae 2025-04-26T19:14:03.231000 {"recorded_at"=>1745694843002}
+    2025/04/26/[$LATEST]8e2905acb4eb441f80066ec163908fae 2025-04-26T19:14:04.238000 {"recorded_at"=>1745694844002}
+    2025/04/26/[$LATEST]8e2905acb4eb441f80066ec163908fae 2025-04-26T19:14:05.230000 {"recorded_at"=>1745694845001}
+    ```
+
+    You can see that the lambda function is actively consuming the data being pushed into that queue. You can now stop the tail command (Ctrl+C).
+
+1. Tail the Lambda function that consumes data from the dr queue on us-west-2:
+    ```
+    ./bin/tail-lambda-consumer.sh secondary dr
+    Tailing DrSqsConsumer in us-west-2...
+    2025/04/26/[$LATEST]068ce66f644740a583b9b33a7b08711e 2025-04-26T19:16:07.402000 {"recorded_at"=>1745694967005}
+    2025/04/26/[$LATEST]068ce66f644740a583b9b33a7b08711e 2025-04-26T19:16:08.268000 {"recorded_at"=>1745694968004}
+    2025/04/26/[$LATEST]068ce66f644740a583b9b33a7b08711e 2025-04-26T19:16:09.309000 {"recorded_at"=>1745694969005}
+    2025/04/26/[$LATEST]068ce66f644740a583b9b33a7b08711e 2025-04-26T19:16:10.255000 {"recorded_at"=>1745694970000}
+    2025/04/26/[$LATEST]068ce66f644740a583b9b33a7b08711e 2025-04-26T19:16:11.265000 {"recorded_at"=>1745694971005}
+    ```
+
+    You can see that the lambda function is actively consuming the data being pushed into that queue. You can now stop the tail command (Ctrl+C).
+
 1. Test a message producer regional failover:
    - Stop the message producer (Ctrl+C)
    - Start the message producer, now publishing messages to the SNS topic in the secondary region:
@@ -95,6 +122,32 @@ The testing procedure demonstraces message publishing to the primary region, cro
     The producer now sends the messages to the SNS topic on us-west-2. After a few minutes, the dashboard will now show traffic going to the secondary SNS topic on us-west-2 and to the SQS queues subscribed to that topic.
 
     ![Secondary Region Dashboard](images/dashboard-secondary.jpg)
+
+1. Tail the Lambda function that consumes data from the active queue on us-west-2:
+    ```
+    ./bin/tail-lambda-consumer.sh secondary active
+    Tailing SqsConsumer in us-west-2...
+    2025/04/26/[$LATEST]e08e6c0aff8a468fb76a23c869e3a28d 2025-04-26T19:29:49.800000 {"recorded_at"=>1745695789005}
+    2025/04/26/[$LATEST]e08e6c0aff8a468fb76a23c869e3a28d 2025-04-26T19:29:50.213000 {"recorded_at"=>1745695790003}
+    2025/04/26/[$LATEST]e08e6c0aff8a468fb76a23c869e3a28d 2025-04-26T19:29:51.189000 {"recorded_at"=>1745695791003}
+    2025/04/26/[$LATEST]e08e6c0aff8a468fb76a23c869e3a28d 2025-04-26T19:29:52.198000 {"recorded_at"=>1745695792004}
+    2025/04/26/[$LATEST]e08e6c0aff8a468fb76a23c869e3a28d 2025-04-26T19:29:53.169000 {"recorded_at"=>1745695793003}
+    ```
+
+    You can see that the lambda function is actively consuming the data being pushed into that queue. You can now stop the tail command (Ctrl+C).
+
+1. Tail the Lambda function that consumes data from the dr queue on us-east-1:
+    ```
+    ./bin/tail-lambda-consumer.sh primary dr
+    Tailing DrSqsConsumer in us-east-1...
+    2025/04/26/[$LATEST]a4b3ed0409fd497e9cce78094ba136d4 2025-04-26T19:29:50.032000 {"recorded_at"=>1745695789005}
+    2025/04/26/[$LATEST]a4b3ed0409fd497e9cce78094ba136d4 2025-04-26T19:29:50.248000 {"recorded_at"=>1745695790003}
+    2025/04/26/[$LATEST]a4b3ed0409fd497e9cce78094ba136d4 2025-04-26T19:29:51.206000 {"recorded_at"=>1745695791003}
+    2025/04/26/[$LATEST]a4b3ed0409fd497e9cce78094ba136d4 2025-04-26T19:29:52.236000 {"recorded_at"=>1745695792004}
+    2025/04/26/[$LATEST]a4b3ed0409fd497e9cce78094ba136d4 2025-04-26T19:29:53.239000 {"recorded_at"=>1745695793003}
+    ```
+
+    You can see that the lambda function is actively consuming the data being pushed into that queue. You can now stop the tail command (Ctrl+C).
 
 ## Cleanup
  
