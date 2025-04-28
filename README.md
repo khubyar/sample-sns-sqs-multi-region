@@ -4,6 +4,30 @@ Amazon Simple Queue Service (SQS) is widely adopted by organizations for its abi
 
 ![alt text](images/diagram.jpg)
 
+## How it works
+
+This demo deploys a multi-region message processing architecture with the following components:
+- SNS topics in both primary and secondary regions
+- an active and dr SQS queues in both regions, including their respective SNS subscriptions
+- Four Lambda functions (one per queue) to process messages
+- A CloudWatch dashboard for monitoring message flow
+- Rquired IAM permissions and policies
+
+
+Message flow in normal operation:
+1. The producer publishes messages to the SNS topic in the primary region
+2. The primary SNS topic fans out messages to:
+    - The active SQS queue in the primary region
+    - The dr SQS queue in the primary region
+3. Lambda functions process messages from both queues
+
+During failover:
+1. The producer switches to publishing messages to the SNS topic in the secondary region
+2. The secondary SNS topic fans out messages to:
+    - The active SQS queue in the secondary region
+    - The dr SQS queue in the secondary region
+3. Lambda functions in the secondary region take over message processing
+
 ## Prerequisites
 - AWS SAM CLI configured with appropriate permissios
 - Ruby 2.7 or later(for running the producer script)
@@ -32,17 +56,6 @@ Amazon Simple Queue Service (SQS) is widely adopted by organizations for its abi
     ```
     ./bin/deploy-stacks.sh 
     ```
-
-
-
-## How it works
-
-The deployment creates:
-- one SNS topic in both primary and secondary regions
-- an active and dr SQS queues in both regions, including their respective SNS subscriptions
-- One Lambda function that consumes messages from each one of the 4 SQS queues
-- A CloudWatch dashboard for monitoring the message flow
-- Rquired IAM permissions and policies
 
 ## Testing
 The testing procedure demonstraces message publishing to the primary region, cross-region message delivery and regional failover.
