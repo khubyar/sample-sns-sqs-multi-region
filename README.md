@@ -40,7 +40,7 @@ Amazon Simple Queue Service (SQS) is widely adopted by organizations for its abi
 The deployment creates:
 - one SNS topic in both primary and secondary regions
 - an active and dr SQS queues in both regions, including their respective SNS subscriptions
-- One Lambda finction that consumes messages from each oe of the 4 SQS queues
+- One Lambda function that consumes messages from each one of the 4 SQS queues
 - A CloudWatch dashboard for monitoring the message flow
 - Rquired IAM permissions and policies
 
