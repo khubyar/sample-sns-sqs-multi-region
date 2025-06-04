@@ -36,16 +36,16 @@ During failover:
 ## Deployment Instructions
 1. Create a new directory, navigate to that directory in a terminal and clone the GitHub repository:
     ```
-    git clone https://github.com/aws-samples/sample-sns-sqs-multi-Region.git
+    git clone https://github.com/aws-samples/sample-sns-sqs-multi-region.git
     ```
 1. Change directory to:
     ```
-    cd sample-sns-sqs-multi-Region
+    cd sample-sns-sqs-multi-region
     ```
 1. [Optional] Configure deployment Regions. The default configuration deploys to us-east-1 (primary) and us-west-2 (secondary). If you want to change it, edit ./bin/config.sh, on lines 5 and 6:
     ```bash
     #!/bin/bash
-    export STACK_NAME=sns-sqs-multi-Region
+    export STACK_NAME=sns-sqs-multi-region
     export PRIMARY_ENV=primary
     export SECONDARY_ENV=secondary
     export PRIMARY_REGION=us-east-1
