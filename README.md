@@ -92,7 +92,7 @@ The testing procedure demonstraces message publishing to the primary Region, cro
 
 1. Tail the AWS Lambda function that consumes data from the active queue on us-east-1:
     ```
-    ./bin/tail-AWS Lambda-consumer.sh primary active
+    ./bin/tail-lambda-consumer.sh primary active
     Tailing SqsConsumer in us-east-1...
     2025/04/26/[$LATEST]8e2905acb4eb441f80066ec163908fae 2025-04-26T19:14:01.235000 {"recorded_at"=>1745694841003}
     2025/04/26/[$LATEST]8e2905acb4eb441f80066ec163908fae 2025-04-26T19:14:02.247000 {"recorded_at"=>1745694842005}
@@ -105,7 +105,7 @@ The testing procedure demonstraces message publishing to the primary Region, cro
 
 1. Tail the AWS Lambda function that consumes data from the DR queue on us-west-2:
     ```
-    ./bin/tail-AWS Lambda-consumer.sh secondary DR
+    ./bin/tail-lambda-consumer.sh secondary dr
     Tailing DrSqsConsumer in us-west-2...
     2025/04/26/[$LATEST]068ce66f644740a583b9b33a7b08711e 2025-04-26T19:16:07.402000 {"recorded_at"=>1745694967005}
     2025/04/26/[$LATEST]068ce66f644740a583b9b33a7b08711e 2025-04-26T19:16:08.268000 {"recorded_at"=>1745694968004}
@@ -138,7 +138,7 @@ The testing procedure demonstraces message publishing to the primary Region, cro
 
 1. Tail the AWS Lambda function that consumes data from the active queue on us-west-2:
     ```
-    ./bin/tail-AWS Lambda-consumer.sh secondary active
+    ./bin/tail-lambda-consumer.sh secondary active
     Tailing SqsConsumer in us-west-2...
     2025/04/26/[$LATEST]e08e6c0aff8a468fb76a23c869e3a28d 2025-04-26T19:29:49.800000 {"recorded_at"=>1745695789005}
     2025/04/26/[$LATEST]e08e6c0aff8a468fb76a23c869e3a28d 2025-04-26T19:29:50.213000 {"recorded_at"=>1745695790003}
@@ -151,7 +151,7 @@ The testing procedure demonstraces message publishing to the primary Region, cro
 
 1. Tail the AWS Lambda function that consumes data from the DR queue on us-east-1:
     ```
-    ./bin/tail-AWS Lambda-consumer.sh primary DR
+    ./bin/tail-lambda-consumer.sh primary dr
     Tailing DrSqsConsumer in us-east-1...
     2025/04/26/[$LATEST]a4b3ed0409fd497e9cce78094ba136d4 2025-04-26T19:29:50.032000 {"recorded_at"=>1745695789005}
     2025/04/26/[$LATEST]a4b3ed0409fd497e9cce78094ba136d4 2025-04-26T19:29:50.248000 {"recorded_at"=>1745695790003}
